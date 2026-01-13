@@ -1,0 +1,10 @@
+[core]
+	repositoryformatversion = 0
+	filemode = false
+	bare = false
+	logallrefupdates = true
+	symlinks = false
+	ignorecase = true
+[branch "main"]
+	gk-last-accessed = 2026-01-13T17:48:06.252Z
+	gk-last-modified = 2026-01-13T17:50:29.095Z
