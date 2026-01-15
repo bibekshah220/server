@@ -35,10 +35,23 @@ const corsOptions = {
             'http://localhost:8080',
             'http://localhost:3000',
             'http://localhost:5173',
-            process.env.FRONTEND_URL
+            process.env.FRONTEND_URL,
+            // Allow all Vercel preview and production deployments
+            /^https:\/\/.*\.vercel\.app$/,
+            process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null
         ].filter(Boolean);
         
-        if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+        // Check if origin matches any allowed origin (including regex patterns)
+        const isAllowed = allowedOrigins.some(allowedOrigin => {
+            if (typeof allowedOrigin === 'string') {
+                return allowedOrigin === origin;
+            } else if (allowedOrigin instanceof RegExp) {
+                return allowedOrigin.test(origin);
+            }
+            return false;
+        });
+        
+        if (isAllowed || process.env.NODE_ENV === 'development') {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));
