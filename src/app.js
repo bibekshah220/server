@@ -79,6 +79,20 @@ app.use(morgan('combined', {
     }
 }));
 
+// Root route - helpful response when visiting base URL
+app.get('/', (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: 'Pharmacy Management API',
+        version: '1.0',
+        endpoints: {
+            health: '/health',
+            api: '/api'
+        },
+        timestamp: new Date().toISOString()
+    });
+});
+
 // Health check route
 app.get('/health', (req, res) => {
     res.status(200).json({
