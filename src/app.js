@@ -21,8 +21,8 @@ const reportRoutes = require('./routes/reportRoutes');
 // Initialize express app
 const app = express();
 
-// Connect to MongoDB
-connectDB();
+// Connect to MongoDB (don't crash on failure - allows /health to work; DB routes will fail until connected)
+connectDB().catch(err => logger.error('Database connection failed:', err.message));
 
 // CORS configuration
 const corsOptions = {

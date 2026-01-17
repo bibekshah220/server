@@ -2,9 +2,9 @@ const winston = require('winston');
 const path = require('path');
 const fs = require('fs');
 
-// Create logs directory if it doesn't exist
+// Create logs directory if it doesn't exist (skip on Vercel - read-only filesystem)
 const logsDir = path.join(__dirname, '..', 'logs');
-if (!fs.existsSync(logsDir)) {
+if (!process.env.VERCEL && !fs.existsSync(logsDir)) {
     fs.mkdirSync(logsDir, { recursive: true });
 }
 
@@ -29,29 +29,32 @@ const consoleFormat = winston.format.combine(
     })
 );
 
-// Create logger
-const logger = winston.createLogger({
-    level: process.env.LOG_LEVEL || 'info',
-    format: logFormat,
-    transports: [
-        // Error logs
+// On Vercel: use Console only (no file writes - serverless has read-only filesystem)
+// Elsewhere: use File transports, and add Console in development
+const transports = process.env.VERCEL
+    ? [new winston.transports.Console({ format: consoleFormat })]
+    : [
         new winston.transports.File({
             filename: path.join(logsDir, 'error.log'),
             level: 'error',
-            maxsize: 5242880, // 5MB
+            maxsize: 5242880,
             maxFiles: 5
         }),
-        // Combined logs
         new winston.transports.File({
             filename: path.join(logsDir, 'combined.log'),
-            maxsize: 5242880, // 5MB
+            maxsize: 5242880,
             maxFiles: 5
         })
-    ]
+    ];
+
+const logger = winston.createLogger({
+    level: process.env.LOG_LEVEL || 'info',
+    format: logFormat,
+    transports
 });
 
-// Add console transport in development
-if (process.env.NODE_ENV !== 'production') {
+// Add console transport in development (when not on Vercel)
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
     logger.add(new winston.transports.Console({
         format: consoleFormat
     }));

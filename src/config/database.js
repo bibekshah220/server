@@ -29,8 +29,8 @@ const connectDB = async () => {
         });
 
     } catch (error) {
-        logger.error(`❌ MongoDB connection failed: ${error.message}`);
-        process.exit(1);
+        logger.error(`MongoDB connection failed: ${error.message}`);
+        throw error;
     }
 };
 
