@@ -79,28 +79,32 @@ app.use(morgan('combined', {
     }
 }));
 
-// Root route - helpful response when visiting base URL
-app.get('/', (req, res) => {
+// Shared root/health response handlers (used for both / and /api paths - Vercel may use /api prefix)
+const rootResponse = (req, res) => {
     res.status(200).json({
         success: true,
         message: 'Pharmacy Management API',
         version: '1.0',
-        endpoints: {
-            health: '/health',
-            api: '/api'
-        },
+        endpoints: { health: '/health', api: '/api' },
         timestamp: new Date().toISOString()
     });
-});
-
-// Health check route
-app.get('/health', (req, res) => {
+};
+const healthResponse = (req, res) => {
     res.status(200).json({
         success: true,
         message: 'Server is running',
         timestamp: new Date().toISOString()
     });
-});
+};
+
+// Root and /api (Vercel often mounts api/index.js at /api, so /api or /api/ gets root)
+app.get('/', rootResponse);
+app.get('/api', rootResponse);
+app.get('/api/', rootResponse);
+
+// Health - try /health and /api/health
+app.get('/health', healthResponse);
+app.get('/api/health', healthResponse);
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -115,11 +119,12 @@ app.use('/api/customers', customerRoutes);
 app.use('/api/purchases', purchaseRoutes);
 app.use('/api/reports', reportRoutes);
 
-// 404 handler
+// 404 handler (include requested path to help debug routing)
 app.use('*', (req, res) => {
     res.status(404).json({
         success: false,
-        message: 'Route not found'
+        message: 'Route not found',
+        requested: { path: req.path, url: req.url, method: req.method }
     });
 });
 
